@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.R
 import com.example.data.MedRepository
-import com.example.data.cloud.CloudSyncEngine
 import com.example.model.CustomSection
+
 import com.example.model.ProfYear
 import com.example.model.StudyContentType
 import com.example.model.Subject
@@ -115,25 +115,18 @@ fun HomeScreen(
 
     val totalMatches = matchedSubjects.size + matchedContents.size + matchedFolders.size + matchedShorts.size
 
-    val isSyncing by CloudSyncEngine.isSyncing.collectAsState()
     val isOnline by MedRepository.isOnline.collectAsState()
-    val lastSyncStatus by CloudSyncEngine.lastSyncStatus.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     val coroutineScope = rememberCoroutineScope()
 
     val currentTheme by MedRepository.currentTheme.collectAsState()
 
     PullToRefreshBox(
-        isRefreshing = isSyncing,
+        isRefreshing = false,
         onRefresh = {
-            val statusMessage = if (isOnline) "Online" else "Offline"
-            android.widget.Toast.makeText(context, statusMessage, android.widget.Toast.LENGTH_SHORT).show()
-            if (isOnline) {
-                coroutineScope.launch {
-                    MedRepository.triggerCloudSync(context)
-                }
-            }
+            android.widget.Toast.makeText(context, "Refreshed", android.widget.Toast.LENGTH_SHORT).show()
         },
+
         state = pullToRefreshState,
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter
@@ -281,14 +274,7 @@ fun HomeScreen(
                         }
                         IconButton(
                             onClick = {
-                                coroutineScope.launch {
-                                    val connected = MedRepository.checkNetworkOnline(context)
-                                    if (connected) {
-                                        CloudSyncEngine.syncFromCloud(context)
-                                    } else {
-                                        android.widget.Toast.makeText(context, "No connection. Please check internet.", android.widget.Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+                                android.widget.Toast.makeText(context, "Checked connection", android.widget.Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(28.dp)
                         ) {
@@ -299,6 +285,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
+
                     }
                 }
             }

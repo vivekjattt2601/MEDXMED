@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.MedRepository
-import com.example.data.cloud.CloudSyncEngine
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,7 +113,6 @@ fun OfflineScreen(
                             coroutineScope.launch {
                                 val connected = MedRepository.checkNetworkOnline(context)
                                 if (connected) {
-                                    CloudSyncEngine.syncFromCloud(context)
                                     onRetry()
                                 } else {
                                     Toast.makeText(context, "Still offline. Please check connection.", Toast.LENGTH_SHORT).show()

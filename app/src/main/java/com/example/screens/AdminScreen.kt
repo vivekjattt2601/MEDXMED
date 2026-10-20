@@ -46,9 +46,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.platform.LocalFocusManager
 import com.example.data.MedRepository
-import com.example.data.cloud.CloudflareR2Manager
-import com.example.data.cloud.CloudSyncEngine
 import com.example.model.*
+import com.example.data.cloud.CloudflareR2Manager
+
+
 import com.example.Screen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -429,8 +430,8 @@ fun AdminScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val isSyncing by CloudSyncEngine.isSyncing.collectAsState()
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
     var showR2ConfigDialog by remember { mutableStateOf(false) }
     var showAppInfoConfigDialog by remember { mutableStateOf(false) }
 
@@ -538,21 +539,6 @@ fun AdminScreen(
                                     onClick = { showAdminMenu = false; showAppInfoConfigDialog = true },
                                     leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) }
                                 )
-                                DropdownMenuItem(
-                                    text = { Text("Cloudflare R2 Settings") },
-                                    onClick = { showAdminMenu = false; showR2ConfigDialog = true },
-                                    leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null, tint = if (CloudflareR2Manager.isConfigured()) Color(0xFF16A34A) else Color(0xFFDC2626)) }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Sync from Cloud") },
-                                    onClick = {
-                                        showAdminMenu = false
-                                        coroutineScope.launch {
-                                            CloudSyncEngine.syncFromCloud(context)
-                                        }
-                                    },
-                                    leadingIcon = { Icon(Icons.Default.CloudSync, contentDescription = null, tint = Color(0xFF2563EB)) }
-                                )
                             }
                         }
                     },
@@ -569,47 +555,8 @@ fun AdminScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (!CloudflareR2Manager.isConfigured()) {
-                Surface(
-                    color = Color(0xFFFEF2F2),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showR2ConfigDialog = true }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Text("⚠️", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = "Cloudflare R2 API Keys Not Set!",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF991B1B)
-                                )
-                                Text(
-                                    text = "Click to set Access Key ID & Secret Key to upload files directly to Cloudflare bucket.",
-                                    fontSize = 11.sp,
-                                    color = Color(0xFFB91C1C)
-                                )
-                            }
-                        }
-                        Surface(
-                            color = Color(0xFFDC2626),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text("Setup ➔", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-                        }
-                    }
-                }
-            }
+
+
 
 
 
@@ -890,28 +837,16 @@ fun AdminScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     // Test Connection Button
+                    // R2 connection testing disabled
                     OutlinedButton(
-                        onClick = {
-                            isTesting = true
-                            testStatus = "Testing connection to Cloudflare R2..."
-                            coroutineScope.launch {
-                                // Save current fields first
-                                CloudflareR2Manager.saveCredentials(r2AccountId, r2AccessKey, r2SecretKey, r2Bucket, r2PublicBaseUrl)
-                                val res = CloudflareR2Manager.testConnection()
-                                isTesting = false
-                                testStatus = if (res.isSuccess) {
-                                    "✓ ${res.getOrThrow()}"
-                                } else {
-                                    "❌ ${res.exceptionOrNull()?.localizedMessage}"
-                                }
-                            }
-                        },
-                        enabled = !isTesting && r2AccountId.isNotBlank() && r2AccessKey.isNotBlank() && r2SecretKey.isNotBlank(),
+                        onClick = { },
+                        enabled = false,
                         modifier = Modifier.fillMaxWidth().height(40.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(if (isTesting) "Testing..." else "⚡ Test Connection with R2", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("⚡ Test Connection (Disabled)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
+
 
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -1562,7 +1497,7 @@ fun HierarchyUploadView(onOpenR2Settings: () -> Unit = {}) {
                 ((contentType == StudyContentType.PDF && (selectedPdfUri != null || title.isNotBlank())) ||
                  (contentType == StudyContentType.VIDEO && title.isNotBlank()))
 
-            val isR2Configured = CloudflareR2Manager.isConfigured()
+            val isR2Configured = false
 
             fun executeUpload(onSuccessReset: () -> Unit) {
                 if (!canSubmit) {
@@ -1647,24 +1582,10 @@ fun HierarchyUploadView(onOpenR2Settings: () -> Unit = {}) {
                             val cleanFile = fileName.trim().replace(" ", "_")
                             val objectKey = "/$cleanProf/$cleanSubject/$cleanFolder/$cleanFile"
 
-                            val uploadResult = CloudflareR2Manager.uploadCompressedPdf(
-                                context = context,
-                                pdfUri = uploadUri,
-                                objectKey = objectKey
-                            ) { progress ->
-                                statusMessage = "Uploading PDF to Cloudflare R2... ${(progress * 100).toInt()}%"
-                            }
+                            // Direct local save - Cloudflare integration removed
+                            statusMessage = "✓ Successfully saved!"
+                            onSuccessReset()
 
-                            if (uploadResult.isSuccess) {
-                                val publicUrl = uploadResult.getOrThrow()
-                                MedRepository.updateStudyContentMediaUrl(contentId, publicUrl)
-                                CloudSyncEngine.publishCatalogToCloud()
-                                statusMessage = "✓ Successfully uploaded to Cloudflare & saved!"
-                                onSuccessReset()
-                            } else {
-                                val err = uploadResult.exceptionOrNull()?.localizedMessage ?: "Upload failed"
-                                statusMessage = "⚠️ Saved locally in app, but Cloudflare upload failed: $err"
-                            }
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
                             e.printStackTrace()

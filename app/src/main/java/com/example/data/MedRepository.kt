@@ -3,9 +3,9 @@ package com.example.data
 import android.content.Context
 import com.example.data.local.*
 import com.example.model.*
-import com.example.data.cloud.CloudSyncEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+
 
 object MedRepository {
 
@@ -308,33 +308,10 @@ object MedRepository {
                 .map { entities -> entities.map { it.toDomain() } }
                 .collect { list -> _shorts.value = list }
         }
-
-        // Automatic background sync from Cloudflare R2 on startup
-        repositoryScope.launch {
-            delay(1200L)
-            com.example.data.cloud.CloudSyncEngine.syncFromCloud(context)
-        }
-    }
-
-    fun triggerCloudSync(context: Context) {
-        repositoryScope.launch {
-            com.example.data.cloud.CloudSyncEngine.syncFromCloud(context)
-        }
-    }
-
-    private var catalogPublishJob: kotlinx.coroutines.Job? = null
-
-    fun triggerCatalogPublish() {
-        catalogPublishJob?.cancel()
-        catalogPublishJob = repositoryScope.launch {
-            kotlinx.coroutines.delay(1500L)
-            if (com.example.data.cloud.CloudflareR2Manager.isConfigured()) {
-                com.example.data.cloud.CloudSyncEngine.publishCatalogToCloud()
-            }
-        }
     }
 
     fun buildCloudflareUrl(prof: ProfYear, subjectId: String, folderName: String, fileName: String): String {
+
         val cleanProf = prof.code
         val cleanSubject = subjectId.trim().replace(" ", "_")
         val cleanFolder = folderName.trim().replace(" ", "_")
@@ -342,6 +319,11 @@ object MedRepository {
         val baseUrl = com.example.data.cloud.CloudflareR2Manager.publicBaseUrl.value.trimEnd('/')
         return "$baseUrl/$cleanProf/$cleanSubject/$cleanFolder/$cleanFile"
     }
+
+    fun triggerCatalogPublish() {
+        // No-op: catalog.json publishing removed per user request
+    }
+
 
     fun recordDeletedFolder(folderId: String, folderName: String) {
         sharedPrefs?.let { prefs ->
@@ -762,9 +744,8 @@ object MedRepository {
                 db.lectureDao().clearAllLectures()
                 db.shortDao().clearAllShorts()
                 db.pomodoroSessionDao().clearAllSessions()
-
-                com.example.data.cloud.CloudSyncEngine.publishEmptyCatalogToCloud()
             }
         }
     }
 }
+

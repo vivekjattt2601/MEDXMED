@@ -293,10 +293,8 @@ fun UploadShortsView() {
                     )
 
                     MedRepository.addShort(shortItem)
-                    coroutineScope.launch {
-                        com.example.data.cloud.CloudSyncEngine.publishCatalogToCloud()
-                    }
                     statusMessage = "✓ Short saved & uploaded to Cloudflare successfully!"
+
                     youtubeUrl = ""
                     fetchedVideoId = null
                     fetchedTitle = ""
