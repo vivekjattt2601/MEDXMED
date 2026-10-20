@@ -51,9 +51,6 @@ fun HomeScreen(
     onSubjectClick: (Subject) -> Unit = {},
     onCustomSectionClick: (CustomSection) -> Unit = {},
     onShortsClick: () -> Unit = {},
-    onFlashcardsClick: () -> Unit,
-    onPYQClick: () -> Unit,
-    onMCQClick: () -> Unit = {},
     onProfileClick: () -> Unit,
     onPdfClick: (title: String, mediaUrl: String) -> Unit = { _, _ -> },
     onVideoClick: (title: String, mediaUrl: String, chapterName: String, subjectName: String) -> Unit = { _, _, _, _ -> }
@@ -67,11 +64,7 @@ fun HomeScreen(
     val allContents by MedRepository.contents.collectAsState()
     val allFolders by MedRepository.folders.collectAsState()
     val allShorts by MedRepository.shorts.collectAsState()
-    val allFlashcards by MedRepository.flashcards.collectAsState()
-    val allPYQs by MedRepository.pyqs.collectAsState()
-    val allMCQs by MedRepository.mcqs.collectAsState()
     val customSections by MedRepository.customSections.collectAsState()
-    val mcqSections by MedRepository.mcqSections.collectAsState()
 
     // Clean case-insensitive query for robust search (small, capital, mixed)
     val cleanQuery = searchQuery.trim().lowercase(Locale.ROOT)
@@ -120,23 +113,7 @@ fun HomeScreen(
         }
     }
 
-    // 5. Matched Flashcards
-    val matchedFlashcards = remember(cleanQuery, allFlashcards) {
-        if (!isSearching) emptyList()
-        else allFlashcards.filter {
-            matchesQuery(it.question, it.answer, it.explanation, it.mnemonic ?: "", it.subjectId)
-        }
-    }
-
-    // 6. Matched PYQs
-    val matchedPYQs = remember(cleanQuery, allPYQs) {
-        if (!isSearching) emptyList()
-        else allPYQs.filter {
-            matchesQuery(it.question, it.subjectId, it.examType, it.highYieldTip, it.year.toString())
-        }
-    }
-
-    val totalMatches = matchedSubjects.size + matchedContents.size + matchedFolders.size + matchedShorts.size + matchedFlashcards.size + matchedPYQs.size
+    val totalMatches = matchedSubjects.size + matchedContents.size + matchedFolders.size + matchedShorts.size
 
     val isSyncing by CloudSyncEngine.isSyncing.collectAsState()
     val isOnline by MedRepository.isOnline.collectAsState()
@@ -718,51 +695,6 @@ fun HomeScreen(
                     }
                 }
 
-                // 5. PYQs Found
-                if (matchedPYQs.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "📝 Previous Year Questions (${matchedPYQs.size})",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF475569)
-                        )
-                    }
-
-                    items(matchedPYQs, key = { it.id }) { pyq ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onPYQClick() },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("📋", fontSize = 22.sp)
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = pyq.question,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        color = Color(0xFF0F172A),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        text = "${pyq.examType} (${pyq.year}) • ${pyq.marks} Marks",
-                                        fontSize = 11.sp,
-                                        color = Color(0xFF64748B)
-                                    )
-                                }
-                                Icon(Icons.Default.ChevronRight, contentDescription = "Open PYQ", tint = Color(0xFF2563EB))
-                            }
-                        }
-                    }
-                }
             }
         } else {
             // Normal Home Screen View (Prof Grid + Smart Study Tools)
@@ -975,178 +907,6 @@ fun HomeScreen(
                     }
                 }
 
-                // 🎯 Large MCQ Section Cards / Practice Bank
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 110.dp)
-                                .shadow(
-                                    elevation = 6.dp,
-                                    shape = RoundedCornerShape(20.dp),
-                                    spotColor = Color(0x33000000)
-                                )
-                                .clickable { onMCQClick() }
-                                .testTag("home_mcq_section_card"),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            listOf(Color(0xFF0D9488), Color(0xFF0F766E))
-                                        )
-                                    )
-                                    .padding(16.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Surface(
-                                            shape = CircleShape,
-                                            color = Color(0x33FFFFFF),
-                                            modifier = Modifier.size(52.dp)
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Text(text = "🎯", fontSize = 26.sp)
-                                            }
-                                        }
-
-                                        Spacer(modifier = Modifier.width(14.dp))
-
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "MCQ Practice Bank",
-                                                color = Color.White,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 17.sp,
-                                                letterSpacing = 0.3.sp
-                                            )
-                                            Text(
-                                                text = "Chapter-wise High-Yield Practice Questions",
-                                                color = Color(0xD9FFFFFF),
-                                                fontSize = 12.sp,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = Color(0x33FFFFFF),
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Icon(
-                                                imageVector = Icons.Default.ChevronRight,
-                                                contentDescription = "Open MCQ Bank",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                // "Self-Study & Resources" Section Header
-                item {
-                    Text(
-                        text = "Self-Study & Resources",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        letterSpacing = (-0.2).sp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp, bottom = 4.dp)
-                    )
-                }
-
-                // Question Bank & Flashcards Resource Cards
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // 1. Question Bank Card
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { onPYQClick() },
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFFEF3C7)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = "📝", fontSize = 22.sp)
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Text(
-                                    text = "PYQ Bank",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-
-                        // 2. Flashcards Card (Restored on Homepage)
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { onFlashcardsClick() },
-                            shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(42.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFF3E8FF)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(text = "📇", fontSize = 22.sp)
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Text(
-                                    text = "Flashcards",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-                }
             }
         }
     }

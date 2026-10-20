@@ -105,8 +105,7 @@ data class StudyContentItem(
     val description: String = "",
     val mediaUrl: String,
     val cloudflareKey: String = "",
-    val createdAt: Long = System.currentTimeMillis(),
-    val isPyq: Boolean = false
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 data class LectureItem(
@@ -135,52 +134,6 @@ data class NoteItem(
     val isCachedOffline: Boolean = true
 )
 
-@Serializable
-enum class QuestionType {
-    TEXT,
-    MCQ,
-    TRUE_FALSE,
-    MATCH_THE_COLUMN,
-    ASSERTION_REASON
-}
-
-@Serializable
-data class FlashcardItem(
-    val id: String,
-    val subjectId: String,
-    val prof: ProfYear,
-    val folderId: String = "",
-    val folderName: String = "",
-    val subfolderName: String = "",
-    val chapterName: String = "",
-    val questionType: QuestionType = QuestionType.TEXT,
-    val question: String,
-    val questionOptions: List<String> = emptyList(), // For MCQ / Match
-    val questionImageUrl: String = "",
-    val answer: String, // Can be option index, or full text
-    val answerImageUrl: String = "",
-    val explanation: String = "", // Added detailed explanation
-    val hint: String = "",
-    val tags: String = "High-Yield",
-    val mnemonic: String? = null,
-    val clinicalPearl: String? = null,
-    val isMastered: Boolean = false,
-    val isSavedOffline: Boolean = true,
-    val difficulty: String = "Medium"
-)
-
-data class PYQItem(
-    val id: String,
-    val subjectId: String,
-    val prof: ProfYear,
-    val year: Int,
-    val examType: String,
-    val question: String,
-    val marks: Int,
-    val answerKey: String,
-    val highYieldTip: String
-)
-
 data class ShortItem(
     val id: String,
     val title: String,
@@ -199,102 +152,3 @@ data class ShortItem(
     val audioTitle: String = "MedXMed Rapid Mnemonics 🩺",
     val createdAt: Long = System.currentTimeMillis()
 )
-
-@Serializable
-data class MCQOption(
-    val id: String = "",
-    val text: String,
-    val imageUrl: String = ""
-)
-
-@Serializable
-data class MCQSection(
-    val id: String,
-    val title: String,
-    val subtitle: String = "",
-    val emoji: String = "🎯",
-    val colorHex1: String = "#0D9488",
-    val colorHex2: String = "#0F766E",
-    val prof: ProfYear = ProfYear.FIRST_PROF,
-    val orderIndex: Int = 0
-) {
-    val gradientColors: List<Color>
-        get() = try {
-            listOf(
-                Color(android.graphics.Color.parseColor(colorHex1)),
-                Color(android.graphics.Color.parseColor(colorHex2))
-            )
-        } catch (e: Exception) {
-            listOf(Color(0xFF0D9488), Color(0xFF0F766E))
-        }
-
-    val gradientBrush: Brush
-        get() = Brush.horizontalGradient(gradientColors)
-}
-
-@Serializable
-data class MCQItem(
-    val id: String,
-    val prof: ProfYear = ProfYear.FIRST_PROF,
-    val subjectId: String = "mcq",
-    val sectionId: String = "",
-    val sectionName: String = "",
-    val folderId: String = "",
-    val folderName: String = "",
-    val subfolderName: String = "",
-    val chapterName: String = "",
-    val question: String,
-    val questionImageUrl: String = "",
-    val options: List<MCQOption> = emptyList(),
-    val correctOptionIndex: Int = 0,
-    val explanation: String = "",
-    val explanationImageUrl: String = "",
-    val difficulty: String = "Medium",
-    val tags: String = "High-Yield",
-    val createdAt: Long = System.currentTimeMillis(),
-    val questionType: String = "MCQ", // "MCQ", "ASSERTION_REASON", "MATCH_THE_COLUMN", "STATEMENT_BASED", "FLOWCHART", "TRUE_FALSE"
-    val assertion: String = "",
-    val reason: String = "",
-    val statements: List<String> = emptyList(),
-    val matchColumnA: List<String> = emptyList(),
-    val matchColumnB: List<String> = emptyList(),
-    val flowchartSteps: List<String> = emptyList()
-)
-
-@Serializable
-data class MCQBookmark(
-    val id: String,
-    val question: String,
-    val options: List<MCQOption> = emptyList(),
-    val correctOptionIndex: Int = 0,
-    val userSelectedOptionIndex: Int? = null,
-    val explanation: String = "",
-    val explanationImageUrl: String = "",
-    val chapterName: String = "",
-    val folderName: String = "",
-    val tags: String = "",
-    val bookmarkedAt: Long = System.currentTimeMillis(),
-    val questionType: String = "MCQ",
-    val assertion: String = "",
-    val reason: String = "",
-    val statements: List<String> = emptyList(),
-    val matchColumnA: List<String> = emptyList(),
-    val matchColumnB: List<String> = emptyList(),
-    val flowchartSteps: List<String> = emptyList()
-)
-
-@Serializable
-data class MCQQuizHistory(
-    val id: String,
-    val chapterName: String,
-    val folderName: String = "",
-    val totalQuestions: Int,
-    val correctCount: Int,
-    val incorrectCount: Int,
-    val skippedCount: Int,
-    val scorePercentage: Int,
-    val timestamp: Long = System.currentTimeMillis(),
-    val totalMarks: Float = 0f,
-    val userAnswers: Map<String, Int> = emptyMap()
-)
-

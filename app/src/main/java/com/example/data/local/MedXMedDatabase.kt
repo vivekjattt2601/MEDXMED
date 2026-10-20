@@ -8,30 +8,22 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [
         NoteEntity::class,
-        FlashcardEntity::class,
-        PYQEntity::class,
         LectureEntity::class,
         ShortEntity::class,
         ContentFolderEntity::class,
         StudyContentEntity::class,
-        PomodoroSessionEntity::class,
-        MCQEntity::class,
-        MCQSectionEntity::class
+        PomodoroSessionEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class MedXMedDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
-    abstract fun flashcardDao(): FlashcardDao
-    abstract fun pyqDao(): PYQDao
     abstract fun lectureDao(): LectureDao
     abstract fun shortDao(): ShortDao
     abstract fun folderDao(): FolderDao
     abstract fun studyContentDao(): StudyContentDao
     abstract fun pomodoroSessionDao(): PomodoroSessionDao
-    abstract fun mcqDao(): MCQDao
-    abstract fun mcqSectionDao(): MCQSectionDao
 
     companion object {
         @Volatile

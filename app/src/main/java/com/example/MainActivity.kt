@@ -50,20 +50,11 @@ sealed interface Screen {
     object Home : Screen
     data class ProfDetail(val prof: ProfYear) : Screen
     data class SubjectDetail(val subject: Subject) : Screen
-    object Flashcards : Screen
-    object PYQ : Screen
-    object MCQ : Screen
-    data class MCQPlayer(
-        val folderId: String,
-        val chapterName: String,
-        val subfolderName: String = ""
-    ) : Screen
     object Shorts : Screen
     object Pomodoro : Screen
     object Profile : Screen
     object Admin : Screen
     data class CustomSectionDetail(val section: CustomSection) : Screen
-    data class MCQSectionHierarchy(val folder: ContentFolder) : Screen
     data class PdfViewer(val title: String, val pdfUri: String) : Screen
     data class VideoPlayer(
         val title: String,
@@ -375,9 +366,6 @@ fun MedXMedApp() {
                             onSubjectClick = { sub -> navigateTo(Screen.SubjectDetail(sub)) },
                             onCustomSectionClick = { sec -> navigateTo(Screen.CustomSectionDetail(sec)) },
                             onShortsClick = { navigateTo(Screen.Shorts) },
-                            onFlashcardsClick = { navigateTo(Screen.Flashcards) },
-                            onPYQClick = { navigateTo(Screen.PYQ) },
-                            onMCQClick = { navigateTo(Screen.MCQ) },
                             onProfileClick = { navigateTo(Screen.Profile) },
                             onPdfClick = { title, uri -> navigateTo(Screen.PdfViewer(title, uri)) },
                             onVideoClick = { title, url, ch, sub -> handleVideoClick(title, url, ch, sub, "") }
@@ -398,31 +386,7 @@ fun MedXMedApp() {
                             onVideoClick = { title, url, ch, sub, fId -> handleVideoClick(title, url, ch, sub, fId) }
                         )
                     }
-                    Screen.Flashcards -> {
-                        FlashcardsScreen(
-                            onBackClick = { screenStack.removeAt(screenStack.lastIndex) }
-                        )
-                    }
-                    Screen.PYQ -> {
-                        PYQScreen(
-                            onBackClick = { screenStack.removeAt(screenStack.lastIndex) },
-                            onPdfClick = { title, uri -> navigateTo(Screen.PdfViewer(title, uri)) }
-                        )
-                    }
-                    Screen.MCQ -> {
-                        MCQScreen(
-                            onBackClick = { screenStack.removeAt(screenStack.lastIndex) },
-                            onOpenChapter = { fId, ch, sub -> navigateTo(Screen.MCQPlayer(fId, ch, sub)) }
-                        )
-                    }
-                    is Screen.MCQPlayer -> {
-                        MCQPlayerScreen(
-                            folderId = screen.folderId,
-                            chapterName = screen.chapterName,
-                            subfolderName = screen.subfolderName,
-                            onBackClick = { screenStack.removeAt(screenStack.lastIndex) }
-                        )
-                    }
+
                     Screen.Shorts -> {
                         ShortsScreen(
                             onBackClick = {
@@ -459,12 +423,7 @@ fun MedXMedApp() {
                             onVideoClick = { title, url, ch, sub, fId -> handleVideoClick(title, url, ch, sub, fId) }
                         )
                     }
-                    is Screen.MCQSectionHierarchy -> {
-                        MCQSectionHierarchyScreen(
-                            folder = screen.folder,
-                            onBackClick = { screenStack.removeAt(screenStack.lastIndex) }
-                        )
-                    }
+
                     is Screen.PdfViewer -> {
                         PdfViewerScreen(
                             title = screen.title,
